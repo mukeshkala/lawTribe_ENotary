@@ -1,0 +1,6 @@
+# Runtime artefacts
+uploads/*.pdf
+uploads/*.txt
+data/*.json
+certificates/*.json
+certificates/*.pdf
