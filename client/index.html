@@ -20,9 +20,7 @@
         <ol id="stepper-list">
           <li class="active">1. Upload</li>
           <li>2. Participants</li>
-          <li>3. OTP</li>
-          <li>4. Session</li>
-          <li>5. Finalise</li>
+          <li>3. Verification</li>
         </ol>
       </nav>
 
@@ -53,33 +51,7 @@
         <h2 id="otp-title">Verify participant identity</h2>
         <p class="helper">Send and confirm a one-time passcode for each participant. Codes expire in 5 minutes.</p>
         <div id="otp-container"></div>
-        <button id="otp-next" class="primary" disabled>Continue</button>
-      </section>
-
-      <section id="step-4" class="step" aria-labelledby="session-title">
-        <h2 id="session-title">Video conference &amp; signatures</h2>
-        <p class="helper">When all parties are verified you can launch a secure meeting room and capture digital signatures.</p>
-        <div class="session-grid">
-          <div class="panel" id="document-preview">
-            <h3>Document preview</h3>
-            <p id="preview-content">The uploaded PDF will be displayed here once processed.</p>
-          </div>
-          <div class="panel" id="video-panel">
-            <h3>Video session</h3>
-            <p id="video-status">Generate a meeting token to start.</p>
-            <button id="start-video" class="primary" disabled>Generate secure room</button>
-          </div>
-        </div>
-        <div class="signatures" id="signature-container"></div>
-        <button id="session-next" class="primary" disabled>Continue</button>
-      </section>
-
-      <section id="step-5" class="step" aria-labelledby="finalise-title">
-        <h2 id="finalise-title">Finalise and archive</h2>
-        <p class="helper">Flatten signatures into the PDF, generate an immutable audit certificate and archive the session.</p>
-        <div id="finalise-summary" class="panel"></div>
-        <button id="finalise" class="primary" disabled>Generate evidence</button>
-        <div id="finalise-feedback" class="feedback" role="status" aria-live="polite"></div>
+        <p id="otp-completion" class="feedback" role="status" aria-live="polite"></p>
       </section>
     </main>
 
@@ -121,31 +93,6 @@
           </form>
         </div>
         <p class="status" data-status role="status" aria-live="polite"></p>
-      </article>
-    </template>
-
-    <template id="signature-template">
-      <article class="signature-card">
-        <header>
-          <h3 data-name></h3>
-          <p data-status></p>
-        </header>
-        <label>
-          <span>Signature image (data URL)</span>
-          <textarea name="dataUrl" rows="3" placeholder="Paste base64 image or drawing data"></textarea>
-        </label>
-        <label>
-          <span>Page number</span>
-          <input name="page" type="number" min="1" value="1" />
-        </label>
-        <label>
-          <span>Position (JSON x/y/width/height)</span>
-          <input name="position" type="text" value="{ &quot;x&quot;: 50, &quot;y&quot;: 50, &quot;width&quot;: 120, &quot;height&quot;: 30 }" />
-        </label>
-        <div class="actions">
-          <button data-action="submit" class="primary">Submit signature</button>
-        </div>
-        <p class="status" data-status></p>
       </article>
     </template>
 
