@@ -92,12 +92,6 @@ async function createSession(payload) {
   return response.json();
 }
 
-async function fetchSession(sessionId) {
-  const response = await fetch(`${API_BASE}/api/sessions/${sessionId}`);
-  if (!response.ok) throw new Error('Session not found');
-  return response.json();
-}
-
 function renderOtpControls(session) {
   const container = document.getElementById('otp-container');
   container.innerHTML = '';
@@ -108,38 +102,51 @@ function renderOtpControls(session) {
     node.querySelector('[data-name]').textContent = participant.fullName;
     node.querySelector('[data-email]').textContent = participant.email;
     const status = node.querySelector('[data-status]');
-    status.textContent = participant.verified ? 'Verified' : 'Awaiting verification';
-    node.querySelector('[data-action="send"]').addEventListener('click', async () => {
-      status.textContent = 'Dispatching…';
-      const response = await fetch(`${API_BASE}/api/sessions/${session.id}/otp/${participant.id}/send`, {
-        method: 'POST',
+    const sendButton = node.querySelector('[data-action="send"]');
+    const form = node.querySelector('form');
+    const codeInput = form.querySelector('input[name="code"]');
+    const verifyButton = form.querySelector('button[type="submit"]');
+    const isVerified = Boolean(participant.verified);
+    status.textContent = isVerified ? 'Verified' : 'Awaiting verification';
+    node.classList.toggle('verified', isVerified);
+    sendButton.disabled = isVerified;
+    codeInput.disabled = isVerified;
+    verifyButton.disabled = isVerified;
+
+    if (!isVerified) {
+      sendButton.addEventListener('click', async () => {
+        status.textContent = 'Dispatching…';
+        const response = await fetch(`${API_BASE}/api/sessions/${session.id}/otp/${participant.id}/send`, {
+          method: 'POST',
+        });
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({ error: 'Unable to send OTP' }));
+          status.textContent = error.error;
+          return;
+        }
+        status.textContent = 'OTP sent. Check email and SMS channels.';
       });
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ error: 'Unable to send OTP' }));
-        status.textContent = error.error;
-        return;
-      }
-      status.textContent = 'OTP sent. Check email and SMS channels.';
-    });
-    node.querySelector('form').addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const formData = new FormData(event.currentTarget);
-      const code = formData.get('code');
-      status.textContent = 'Verifying…';
-      const response = await fetch(`${API_BASE}/api/sessions/${session.id}/otp/${participant.id}/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code }),
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const formData = new FormData(event.currentTarget);
+        const code = formData.get('code');
+        status.textContent = 'Verifying…';
+        const response = await fetch(`${API_BASE}/api/sessions/${session.id}/otp/${participant.id}/verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          status.textContent = payload.error || 'Unable to verify';
+          return;
+        }
+        state.session = payload.session;
+        status.textContent = 'Verified';
+        updateOtpState();
       });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        status.textContent = payload.error || 'Unable to verify';
-        return;
-      }
-      state.session = payload.session;
-      status.textContent = 'Verified';
-      updateOtpState();
-    });
+    }
     container.appendChild(node);
   });
 }
@@ -147,106 +154,19 @@ function renderOtpControls(session) {
 function updateOtpState() {
   const session = state.session;
   if (!session) return;
-  const nextButton = document.getElementById('otp-next');
   renderOtpControls(session);
   const allVerified = session.participants.every((p) => p.verified);
-  nextButton.disabled = !allVerified;
-  document.getElementById('start-video').disabled = !allVerified;
-  if (allVerified) {
-    document.getElementById('video-status').textContent = 'All participants verified. Ready to generate room token.';
+  const completion = document.getElementById('otp-completion');
+  if (completion) {
+    if (allVerified) {
+      completion.textContent = 'All participants verified. Process complete.';
+      completion.classList.add('success');
+    } else {
+      const remaining = session.participants.filter((p) => !p.verified).length;
+      completion.textContent = `${remaining} participant${remaining === 1 ? '' : 's'} awaiting verification.`;
+      completion.classList.remove('success');
+    }
   }
-}
-
-async function issueVideoToken(sessionId) {
-  const response = await fetch(`${API_BASE}/api/sessions/${sessionId}/video`, { method: 'POST' });
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({ error: 'Unable to issue token' }));
-    throw new Error(payload.error || 'Unable to issue token');
-  }
-  return response.json();
-}
-
-function renderSignatures(session) {
-  const container = document.getElementById('signature-container');
-  container.innerHTML = '';
-  const template = document.getElementById('signature-template');
-  session.participants.forEach((participant) => {
-    const node = template.content.firstElementChild.cloneNode(true);
-    node.dataset.participantId = participant.id;
-    node.querySelector('[data-name]').textContent = participant.fullName;
-    const status = node.querySelector('[data-status]');
-    status.textContent = participant.signature ? `Signed at ${participant.signature.signedAt}` : 'Pending signature';
-    node.querySelector('[data-action="submit"]').addEventListener('click', async () => {
-      const dataUrl = node.querySelector('textarea[name="dataUrl"]').value.trim();
-      const page = Number(node.querySelector('input[name="page"]').value || 1);
-      const positionRaw = node.querySelector('input[name="position"]').value.trim();
-      let position;
-      try {
-        position = JSON.parse(positionRaw.replace(/&quot;/g, '"'));
-      } catch (error) {
-        status.textContent = 'Position must be valid JSON';
-        return;
-      }
-      status.textContent = 'Uploading signature…';
-      const response = await fetch(`${API_BASE}/api/sessions/${session.id}/signatures`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantId: participant.id, type: 'drawn', dataUrl, page, position }),
-      });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        status.textContent = payload.error || 'Unable to store signature';
-        return;
-      }
-      state.session = payload.session;
-      status.textContent = 'Signature captured.';
-      renderSignatures(state.session);
-      updateFinaliseState();
-    });
-    container.appendChild(node);
-  });
-}
-
-async function finaliseSession(sessionId) {
-  const response = await fetch(`${API_BASE}/api/sessions/${sessionId}/finalize`, { method: 'POST' });
-  if (!response.ok) {
-    const payload = await response.json().catch(() => ({ error: 'Finalisation failed' }));
-    throw new Error(payload.error || 'Finalisation failed');
-  }
-  return response.json();
-}
-
-function updateFinaliseState() {
-  const session = state.session;
-  if (!session) return;
-  const allSigned = session.participants.every((p) => p.signature);
-  document.getElementById('session-next').disabled = !allSigned;
-  document.getElementById('finalise').disabled = !allSigned;
-  const summary = document.getElementById('finalise-summary');
-  summary.innerHTML = `
-    <h3>Ready for evidence package</h3>
-    <ul>
-      ${session.participants
-        .map((p) => `<li>${p.fullName} — ${p.signature ? 'Signed' : 'Pending'}</li>`)
-        .join('')}
-    </ul>
-  `;
-}
-
-function setPreview(upload) {
-  const preview = document.getElementById('preview-content');
-  if (!upload) {
-    preview.textContent = 'Preview unavailable';
-    return;
-  }
-  fetch(upload.preview)
-    .then((response) => response.text())
-    .then((text) => {
-      preview.textContent = text;
-    })
-    .catch(() => {
-      preview.textContent = 'Preview unavailable';
-    });
 }
 
 function initialise() {
@@ -290,48 +210,10 @@ function initialise() {
         participants: data,
       });
       state.session = payload.session;
-      setPreview(state.upload);
-      renderOtpControls(state.session);
       setStep(3);
+      updateOtpState();
     } catch (error) {
       alert(error.message);
-    }
-  });
-
-  document.getElementById('otp-next').addEventListener('click', () => {
-    setStep(4);
-    renderSignatures(state.session);
-    updateFinaliseState();
-  });
-
-  document.getElementById('start-video').addEventListener('click', async () => {
-    try {
-      const { roomId, token } = await issueVideoToken(state.session.id);
-      state.session.videoSession = { roomId, token };
-      document.getElementById('video-status').textContent = `Room ${roomId} issued. Token ${token.slice(0, 12)}…`;
-      document.getElementById('session-next').disabled = false;
-    } catch (error) {
-      document.getElementById('video-status').textContent = error.message;
-    }
-  });
-
-  document.getElementById('session-next').addEventListener('click', () => {
-    setStep(5);
-    updateFinaliseState();
-  });
-
-  document.getElementById('finalise').addEventListener('click', async () => {
-    const feedback = document.getElementById('finalise-feedback');
-    feedback.textContent = 'Generating evidence…';
-    try {
-      const payload = await finaliseSession(state.session.id);
-      feedback.innerHTML = `
-        <strong>Success.</strong> Hash ${payload.hash}<br />
-        <a href="${payload.certificate.json}" target="_blank" rel="noopener">Download JSON certificate</a><br />
-        <a href="${payload.certificate.pdf}" target="_blank" rel="noopener">Download PDF certificate</a>
-      `;
-    } catch (error) {
-      feedback.textContent = error.message;
     }
   });
 }
