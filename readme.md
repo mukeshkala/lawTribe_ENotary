@@ -6,6 +6,12 @@ A reference implementation for running a secure remote notarisation workflow. Th
 
 - **Document intake** – upload PDFs via the API, store on disk, and expose preview metadata to the client.
 - **Participant registry** – capture full name, email and Aadhaar details with inline validation.
+A lightweight, production-ready reference implementation for running a secure remote notarisation workflow. The stack is intentionally dependency-free to run in constrained environments while demonstrating core flows: document intake, participant verification, OTP challenges, video session authorisation, signature capture, and evidence generation.
+
+## Features
+
+- **Document intake** – upload PDFs directly to the node server, store on disk, and expose preview metadata to the client.
+- **Participant registry** – capture full name, email and Aadhaar details with inline accessibility-friendly validation.
 - **OTP verification** – generate six digit codes with five-minute TTL, enforce retry throttling and lockout after repeated failures.
 - **Video session provisioning** – issue signed JSON web tokens to guard meeting access once every participant is verified.
 - **Signature capture** – record drawn signatures with contextual metadata (page, bounding box, timestamp, participant ID).
@@ -19,6 +25,10 @@ A reference implementation for running a secure remote notarisation workflow. Th
 │   ├── app.json
 │   ├── babel.config.js
 │   └── package.json
+├── client          # Static front-end experience
+│   ├── index.html
+│   ├── styles.css
+│   └── app.js
 ├── server          # Node.js API & evidence services
 │   ├── index.js
 │   ├── data/
@@ -34,6 +44,10 @@ A reference implementation for running a secure remote notarisation workflow. Th
 The backend avoids external dependencies so it can boot on a vanilla Node.js 18+ runtime.
 
 ```bash
+The stack avoids npm dependencies so that it can boot on a vanilla Node.js 18+ runtime.
+
+```bash
+# Start the API + static asset server
 cd server
 node index.js
 ```
@@ -66,6 +80,14 @@ EXPO_PUBLIC_API_BASE_URL=http://192.168.1.10:4000 expo start
 | ------------ | ----------------------------------------------------- | -------------------------------- |
 | `PORT`       | HTTP port for the server                              | `4000`                           |
 | `JWT_SECRET` | Secret used when minting video session tokens         | `development-secret-change-me`   |
+Navigate to [http://localhost:4000](http://localhost:4000) to launch the client.
+
+## Environment variables
+
+| Name        | Description                                                   | Default                      |
+| ----------- | ------------------------------------------------------------- | ---------------------------- |
+| `PORT`      | HTTP port for the server                                      | `4000`                       |
+| `JWT_SECRET`| Secret used when minting video session tokens                 | `development-secret-change-me` |
 
 ## Data persistence
 

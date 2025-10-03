@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LawTribe E-Notary</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>LawTribe E-Notary</h1>
+      <p class="subtitle">
+        Secure, accessible digital notarisation workflow for distributed legal teams.
+      </p>
+    </header>
+
+    <main class="app">
+      <nav class="stepper" aria-label="Progress">
+        <ol id="stepper-list">
+          <li class="active">1. Upload</li>
+          <li>2. Participants</li>
+          <li>3. Verification</li>
+        </ol>
+      </nav>
+
+      <section id="step-1" class="step active" aria-labelledby="upload-title">
+        <h2 id="upload-title">Upload the document</h2>
+        <p class="helper">Upload a PDF that requires notarisation. The file never leaves your browser without encryption.</p>
+        <div class="dropzone" role="button" tabindex="0" aria-describedby="upload-instructions">
+          <input id="file-input" type="file" accept="application/pdf" aria-label="Select a PDF document" />
+          <p id="upload-instructions">Drag & drop or select a PDF (max 10 MB).</p>
+        </div>
+        <div id="upload-feedback" class="feedback" role="status" aria-live="polite"></div>
+        <button id="upload-next" class="primary" disabled>Continue</button>
+      </section>
+
+      <section id="step-2" class="step" aria-labelledby="participants-title">
+        <h2 id="participants-title">Capture participants</h2>
+        <p class="helper">Provide verified contact details for all signers and the notary. Aadhaar numbers are encrypted before transmission.</p>
+        <form id="participants-form" novalidate>
+          <div id="participants-container"></div>
+          <div class="actions">
+            <button type="button" id="add-participant" class="secondary">Add Participant</button>
+            <button type="submit" class="primary">Save &amp; Continue</button>
+          </div>
+        </form>
+      </section>
+
+      <section id="step-3" class="step" aria-labelledby="otp-title">
+        <h2 id="otp-title">Verify participant identity</h2>
+        <p class="helper">Send and confirm a one-time passcode for each participant. Codes expire in 5 minutes.</p>
+        <div id="otp-container"></div>
+        <p id="otp-completion" class="feedback" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+
+    <template id="participant-template">
+      <fieldset class="participant-card">
+        <legend>Participant <span data-role></span></legend>
+        <label>
+          <span>Full name</span>
+          <input name="fullName" required aria-required="true" autocomplete="name" />
+          <span class="error" data-error="fullName"></span>
+        </label>
+        <label>
+          <span>Email</span>
+          <input name="email" type="email" required aria-required="true" autocomplete="email" />
+          <span class="error" data-error="email"></span>
+        </label>
+        <label>
+          <span>Aadhaar</span>
+          <input name="aadhaar" inputmode="numeric" pattern="\\d{12}" minlength="12" maxlength="12" required aria-required="true" />
+          <span class="error" data-error="aadhaar"></span>
+        </label>
+      </fieldset>
+    </template>
+
+    <template id="otp-template">
+      <article class="otp-card">
+        <header>
+          <h3 data-name></h3>
+          <p data-email></p>
+        </header>
+        <div class="otp-actions">
+          <button data-action="send" class="secondary">Send OTP</button>
+          <form data-action="verify">
+            <label>
+              <span class="sr-only">Enter OTP</span>
+              <input name="code" inputmode="numeric" pattern="\\d{6}" maxlength="6" placeholder="••••••" aria-label="Enter 6 digit code" />
+            </label>
+            <button type="submit" class="primary">Verify</button>
+          </form>
+        </div>
+        <p class="status" data-status role="status" aria-live="polite"></p>
+      </article>
+    </template>
+
+    <script src="app.js" type="module"></script>
+  </body>
+</html>
