@@ -1,4 +1,22 @@
-const API_BASE = window.location.origin.replace(/\/$/, '');
+function determineApiBase() {
+  if (window.API_BASE_URL) {
+    return window.API_BASE_URL.replace(/\/$/, '');
+  }
+
+  const meta = document.querySelector('meta[name="api-base"]');
+  if (meta && meta.content) {
+    return meta.content.replace(/\/$/, '');
+  }
+
+  const { protocol, hostname, port } = window.location;
+  if (!port || port === '4000') {
+    return `${protocol}//${hostname}${port ? `:${port}` : ''}`.replace(/\/$/, '');
+  }
+
+  return `${protocol}//${hostname}:4000`;
+}
+
+const API_BASE = determineApiBase();
 
 const state = {
   upload: null,
