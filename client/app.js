@@ -114,8 +114,8 @@ async function verifyOtpWithProtean(participant, code) {
   return {
     success,
     message: success
-      ? 'Protean verification succeeded (using demo OTP 123456).'
-      : 'Protean verification failed. Use OTP 123456 while testing.',
+      ? 'Authentication successful (demo OTP 123456).'
+      : 'Authentication failed. Use OTP 123456 while testing.',
   };
 }
 
@@ -385,7 +385,7 @@ async function handleVerifyOtp(participantId, codeInput, statusElement, submitBu
       throw new Error(proteanResult.message || 'Protean verification failed');
     }
 
-    statusElement.textContent = proteanResult.message || 'Protean verification succeeded.';
+    statusElement.textContent = proteanResult.message || 'Authentication successful.';
 
     const response = await fetch(`${API_BASE}/api/sessions/${state.session.id}/otp/${participantId}/verify`, {
       method: 'POST',
@@ -398,7 +398,7 @@ async function handleVerifyOtp(participantId, codeInput, statusElement, submitBu
     }
     nextSession = data.session;
     success = true;
-    statusElement.textContent = 'Verified';
+    statusElement.textContent = 'Authentication successful.';
     codeInput.value = '';
   } catch (error) {
     statusElement.textContent = error.message || 'Unable to verify OTP';
@@ -435,7 +435,7 @@ function renderOtpStep() {
 
     nameElement.textContent = participant.fullName;
     emailElement.textContent = participant.email;
-    statusElement.textContent = participant.verified ? 'Verified' : '';
+    statusElement.textContent = participant.verified ? 'Authentication successful.' : '';
 
     sendButton.addEventListener('click', () => handleSendOtp(participant.id, statusElement, sendButton));
     verifyForm.addEventListener('submit', (event) => {

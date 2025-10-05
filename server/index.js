@@ -12,6 +12,7 @@ const CLIENT_DIR = path.join(__dirname, '..', 'client');
 const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-change-me';
 const OTP_TTL_MS = 5 * 60 * 1000;
 const OTP_MAX_ATTEMPTS = 5;
+const DEMO_PROTEAN_OTP = process.env.DEMO_OTP || '123456';
 const PORT = process.env.PORT || 4000;
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -83,7 +84,9 @@ function appendAudit(session, eventType, details) {
 }
 
 function generateOtp() {
-  return `${Math.floor(100000 + Math.random() * 900000)}`;
+  // During Protean integration bring-up we rely on a deterministic OTP so that
+  // the front-end can validate the flow without external dependencies.
+  return DEMO_PROTEAN_OTP;
 }
 
 function signJwt(payload, expiresInSeconds = 300) {

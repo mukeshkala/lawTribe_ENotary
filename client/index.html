@@ -70,7 +70,7 @@
         </label>
         <label>
           <span>Aadhaar</span>
-          <input name="aadhaar" inputmode="numeric" pattern="\\d{12}" minlength="12" maxlength="12" required aria-required="true" />
+          <input name="aadhaar" inputmode="numeric" pattern="[0-9]{12}" minlength="12" maxlength="12" required aria-required="true" />
           <span class="error" data-error="aadhaar"></span>
         </label>
       </fieldset>
@@ -87,7 +87,7 @@
           <form data-action="verify">
             <label>
               <span class="sr-only">Enter OTP</span>
-              <input name="code" inputmode="numeric" pattern="\\d{6}" maxlength="6" placeholder="••••••" aria-label="Enter 6 digit code" />
+              <input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" placeholder="••••••" aria-label="Enter 6 digit code" />
             </label>
             <button type="submit" class="primary">Verify</button>
           </form>
