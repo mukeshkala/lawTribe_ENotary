@@ -97,6 +97,28 @@ function resetOtpStep() {
   otpCompletionMessage.className = 'feedback';
 }
 
+async function verifyOtpWithProtean(participant, code) {
+  // TODO: Replace this stub with an integration to the Protean verification API.
+  // The actual implementation should call the remote service with the participant's
+  // Aadhaar number and OTP code, and resolve based on the API response.
+  console.info('Invoking Protean OTP verification (placeholder)', {
+    participantId: participant?.id,
+    aadhaar: participant?.aadhaar,
+  });
+
+  // Simulate network latency so the UI reflects an asynchronous call.
+  await new Promise((resolve) => setTimeout(resolve, 400));
+
+  const success = code === '123456';
+
+  return {
+    success,
+    message: success
+      ? 'Authentication successful (demo OTP 123456).'
+      : 'Authentication failed. Use OTP 123456 while testing.',
+  };
+}
+
 function readFileAsBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -344,14 +366,27 @@ async function handleVerifyOtp(participantId, codeInput, statusElement, submitBu
     return;
   }
 
+  const participant = state.session.participants?.find((item) => item.id === participantId);
+  if (!participant) {
+    statusElement.textContent = 'Participant information unavailable.';
+    return;
+  }
+
   submitButton.disabled = true;
   codeInput.disabled = true;
-  statusElement.textContent = 'Verifying…';
+  statusElement.textContent = 'Verifying with Protean…';
 
   let nextSession = null;
   let success = false;
 
   try {
+    const proteanResult = await verifyOtpWithProtean(participant, code);
+    if (!proteanResult.success) {
+      throw new Error(proteanResult.message || 'Protean verification failed');
+    }
+
+    statusElement.textContent = proteanResult.message || 'Authentication successful.';
+
     const response = await fetch(`${API_BASE}/api/sessions/${state.session.id}/otp/${participantId}/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -363,7 +398,7 @@ async function handleVerifyOtp(participantId, codeInput, statusElement, submitBu
     }
     nextSession = data.session;
     success = true;
-    statusElement.textContent = 'Verified';
+    statusElement.textContent = 'Authentication successful.';
     codeInput.value = '';
   } catch (error) {
     statusElement.textContent = error.message || 'Unable to verify OTP';
@@ -400,7 +435,7 @@ function renderOtpStep() {
 
     nameElement.textContent = participant.fullName;
     emailElement.textContent = participant.email;
-    statusElement.textContent = participant.verified ? 'Verified' : '';
+    statusElement.textContent = participant.verified ? 'Authentication successful.' : '';
 
     sendButton.addEventListener('click', () => handleSendOtp(participant.id, statusElement, sendButton));
     verifyForm.addEventListener('submit', (event) => {
