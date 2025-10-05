@@ -135,6 +135,7 @@ async function processFile(file) {
     setUploadFeedback(error.message || 'Upload failed', 'error');
   } finally {
     fileInput.value = '';
+    uploadNextButton.disabled = !state.upload;
   }
 }
 
