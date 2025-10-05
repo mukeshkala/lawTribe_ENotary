@@ -82,6 +82,11 @@ EXPO_PUBLIC_API_BASE_URL=http://192.168.1.10:4000 expo start
 | `JWT_SECRET` | Secret used when minting video session tokens         | `development-secret-change-me`   |
 Navigate to [http://localhost:4000](http://localhost:4000) to launch the client.
 
+When serving the static client from a different port (for example via `npx http-server client`), the browser-based experience
+will automatically fall back to `http://<host>:4000` for API calls. To target an alternative origin, set either a global
+`window.API_BASE_URL` variable before `app.js` loads or add `<meta name="api-base" content="https://your-api.example.com" />`
+to `client/index.html`.
+
 ## Environment variables
 
 | Name        | Description                                                   | Default                      |
