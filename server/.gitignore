@@ -4,3 +4,4 @@ uploads/*.txt
 data/*.json
 certificates/*.json
 certificates/*.pdf
+/node_modules

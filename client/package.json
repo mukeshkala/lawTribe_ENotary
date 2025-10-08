@@ -1,23 +1,14 @@
 {
-  "name": "lawtribe-enotary-mobile",
-  "version": "1.0.0",
+  "name": "client",
   "private": true,
-  "main": "App.js",
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
-  },
-  "dependencies": {
-    "expo": "~50.0.13",
-    "expo-document-picker": "~11.7.0",
-    "expo-file-system": "~16.0.8",
-    "react": "18.2.0",
-    "react-native": "0.73.6"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0",
-    "babel-preset-expo": "^9.5.1"
+    "vite": "^7.1.7"
   }
 }
